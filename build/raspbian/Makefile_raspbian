@@ -1,0 +1,92 @@
+SHELL = /bin/bash
+
+GOAL := all
+ifeq ($(MAKECMDGOALS), clean)
+GOAL := clean
+endif
+
+#======================================================================
+# Build Environment (Don't edit these configurations)
+#======================================================================
+export REL_OUTLIB_DIR := $(REL_OUTPUT_DIR)/$(BUILD_MODE)
+
+#======================================================================
+# Toolchain setting
+#======================================================================
+CCACHE := $(shell type -P ccache 2>/dev/null)
+MAKE := make --no-print-directory
+export CC := $(CCACHE) gcc
+export CXX := $(CCACHE) g++
+export AR := ar
+export STRIP := strip
+
+#----------------------------------------------------------------------
+# compiler flags
+#----------------------------------------------------------------------
+CFLAGS := -fpic -MP -MMD -Wall -Winit-self -Wdeprecated-declarations -D_REENTRANT
+ifeq ($(ARCH), pi2)
+CFLAGS += -march=armv7-a -mfloat-abi=hard -mfpu=vfp
+else
+CFLAGS += -march=armv6 -mfloat-abi=hard -mfpu=vfp
+endif
+		
+ifeq ($(V), 1)
+CFLAGS += -Wextra -Wsign-conversion
+else
+CFLAGS += -Wsign-compare
+endif
+
+CFLAGS += -Wno-unused-parameter
+
+ifeq ($(BUILD_MODE), debug)
+CFLAGS += -D_DEBUG -O0 -g
+else
+CFLAGS += -DNDEBUG -O2 -Os
+endif
+
+CXXFLAGS := -Winvalid-offsetof -Wno-reorder
+
+export CXXFLAGS
+export CFLAGS
+
+#----------------------------------------------------------------------
+# flags
+#----------------------------------------------------------------------
+export ARFLAGS := crsD
+export STRIPFLAGS := --strip-unneeded
+
+#======================================================================
+# Make the Projects
+#======================================================================
+.PHONY: all clean delete libs
+
+all: libs
+
+clean: libs
+
+delete:
+	@echo "Delete output files"
+	@$(RM) -rf $(REL_OUTLIB_DIR)
+
+libs: essential_libs project_libs
+
+essential_libs: version pal mem
+
+version:
+ifneq ($(GOAL), clean)
+	@sh $(ABS_SRC_ROOT)/00_config/version/version_modify.sh
+endif
+	@$(MAKE) -C $(ABS_SRC_ROOT)/00_config/version -f Makefile.proj $(GOAL)
+
+pal:
+	@$(MAKE) -C $(ABS_SRC_ROOT)/01_pal/pal -f Makefile.proj $(GOAL) 
+
+mem:
+	@$(MAKE) -C $(ABS_SRC_ROOT)/02_mem/mem -f Makefile.proj $(GOAL)
+
+#======================================================================
+# Include make files
+#======================================================================
+include ../../projects/project_libs.mak
+include merge.mak
+#======================================================================

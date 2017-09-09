@@ -1,0 +1,11 @@
+SHELL = /bin/sh
+
+PROJECT_NAME    := ni_version
+SRCDIRS     	:= .
+PROJECT_DEFINES	:= -D_PROJ_DEF_HERE
+PROJECT_INC		:= -I.
+
+#=====================================
+include $(ABS_BUILD_ROOT)/Makefile.inc
+#=====================================
+

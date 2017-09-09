@@ -1,0 +1,24 @@
+set nocp
+set ttyfast
+set ignorecase
+set smartcase
+syntax on
+colorscheme darkblue
+
+nmap <F4>       <ESC>:make config<CR><CR>:echo "config.h generated."<CR>
+
+nmap <F5>       <ESC>:make<CR><CR>:copen 100<CR>
+nmap <F6>       <ESC>:make J=1<CR><CR>:copen 100<CR>
+nmap <F7>       <ESC>:make clean<CR><CR>:copen 100<CR>
+nmap <F8>       <ESC>:make delete<CR><CR>:echo "all libraries deleted."<CR>
+
+nmap <C-v>b     <ESC>:make V=1<CR><CR>:copen 100<CR>
+nmap <C-v>s     <ESC>:make V=1 J=1<CR><CR>:copen 100<CR>
+
+nmap <C-j>      <ESC><C-w>j
+nmap <C-k>      <ESC><C-w>k
+
+nmap <F2>       <ESC>:cp<CR>
+nmap <F3>       <ESC>:cn<CR>
+
+nmap <F9>       <ESC>:qa!<CR>

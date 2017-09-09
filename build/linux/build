@@ -1,0 +1,2 @@
+#!/bin/sh
+vim --noplugin -u ../vimrc_make ../vimrc_make_help -R

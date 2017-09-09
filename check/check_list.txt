@@ -1,0 +1,14 @@
+IRIS Library Check List
+
+nconf_host_XXX : Target Host (linux, win32, macosx, android, ios)
+nconf_config_XXX : Configuration (debug or release)
+nconf_safeheap_XXX : Operation method for memory limit (pause or abort or pass)
+nconf_version_XXX : Build version
+
+[DEBUG Only]
+nconf_heap_usage : Enabled heap usage checking function
+nconf_heap_leakage : Enabled heap leakage checking function
+nconf_log_backtrace : Enabled backtrace log function
+
+[RELEASE Only]
+nconf_release_log : Enabled logging function

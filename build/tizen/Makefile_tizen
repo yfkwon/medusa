@@ -1,0 +1,127 @@
+SHELL = /bin/bash
+
+ifeq ($(TIZEN_SDK),)
+stop_sdk:
+	$(error Cannot find TIZEN_SDK MACRO.)
+endif
+
+PATH:=$(PATH):$(TIZEN_SDK)/tools/i386-linux-gnueabi-gcc-4.9/bin
+PATH:=$(PATH):$(TIZEN_SDK)/tools/arm-linux-gnueabi-gcc-4.9/bin
+
+GOAL := all
+ifeq ($(MAKECMDGOALS), clean)
+GOAL := clean
+endif
+
+#======================================================================
+# Build Environment (Don't edit these configurations)
+#======================================================================
+export REL_OUTLIB_DIR := $(REL_OUTPUT_DIR)/$(BUILD_MODE)/$(ARCH)
+
+#======================================================================
+# Toolchain setting
+#======================================================================
+CCACHE := $(shell type -P ccache 2>/dev/null)
+MAKE := make --no-print-directory
+export CC := $(CCACHE) $(TC_PREFIX)gcc
+export CXX := $(CCACHE) $(TC_PREFIX)g++
+export AR := $(TC_PREFIX)ar
+export STRIP := $(TC_PREFIX)strip
+
+#----------------------------------------------------------------------
+# compiler flags
+#----------------------------------------------------------------------
+CFLAGS := -fpic -ffunction-sections -funwind-tables -fstack-protector \
+                -Wno-psabi \
+                -funswitch-loops -finline-limit=300 \
+                -D__ARM_ARCH_5__ -D__ARM_ARCH_5T__ -D__ARM_ARCH_5E__ -D__ARM_ARCH_5TE__ \
+                -D_REENTRANT \
+                -MP -MMD \
+                -Wall \
+                -Winit-self \
+                -Wdeprecated-declarations
+
+ifeq ($(ARCHS), arm)
+CFLAGS += -march=armv7-a -mfloat-abi=softfp -mfpu=vfp
+endif
+
+ifeq ($(V), 1)
+CFLAGS += -Wextra -Wsign-conversion
+else
+CFLAGS += -Wsign-compare
+endif
+
+CFLAGS += -Wno-unused-parameter
+
+ifeq ($(BUILD_MODE), debug)
+CFLAGS += -D_DEBUG -O0 -g -fno-omit-frame-pointer -fno-strict-aliasing
+else
+CFLAGS += -DNDEBUG -O2 -Os -fomit-frame-pointer -fstrict-aliasing
+endif
+
+CXXFLAGS := -fno-exceptions -fno-rtti -Winvalid-offsetof -Wno-reorder
+
+ifeq ($(ARCHS), arm)
+TIZEN_INCLUDE_PATH = $(TIZEN_SDK)/platforms/tizen-2.4/mobile/rootstraps/mobile-2.4-device.core/usr/include/
+else
+TIZEN_INCLUDE_PATH = $(TIZEN_SDK)/platforms/tizen-2.4/mobile/rootstraps/mobile-2.4-emulator.core/usr/include/
+
+endif
+
+CFLAGS += -I$(TIZEN_INCLUDE_PATH)
+CXXFLAGS += -I$(TIZEN_INCLUDE_PATH)
+
+
+CXXFLAGS := -fno-exceptions -Winvalid-offsetof -Wno-reorder -frtti
+
+export CXXFLAGS
+export CFLAGS
+
+#----------------------------------------------------------------
+# flags
+#----------------------------------------------------------------
+export ARFLAGS := crsD
+export STRIPFLAGS := --strip-unneeded
+
+#======================================================================
+# Make the Projects
+#======================================================================
+.PHONY: all clean delete libs
+
+all: libs
+
+clean: libs
+	@echo
+
+delete:
+	@echo "Delete output files for $(ARCH)"
+	@$(RM) -rf $(REL_OUTLIB_DIR)
+
+libs: essential_libs project_libs
+
+essential_libs: version pal mem
+
+version:
+ifneq ($(GOAL), clean)
+ifeq ($(HOST), darwin)
+	@sh $(ABS_SRC_ROOT)/00_config/version/version_modify_mac.sh
+else
+	@sh $(ABS_SRC_ROOT)/00_config/version/version_modify.sh
+endif
+endif
+	@$(MAKE) -C $(ABS_SRC_ROOT)/00_config/version -f Makefile.proj $(GOAL)
+
+pal:
+	@$(MAKE) -C $(ABS_SRC_ROOT)/01_pal/pal -f Makefile.proj $(GOAL) 
+
+mem:
+	@$(MAKE) -C $(ABS_SRC_ROOT)/02_mem/mem -f Makefile.proj $(GOAL)
+
+#======================================================================
+# Include make files
+#======================================================================
+include ../../projects/project_libs.mak
+include merge.mak
+-include ../../projects/project_so.mak
+#======================================================================
+

@@ -1,0 +1,99 @@
+SHELL = /bin/bash
+
+GOAL := all
+ifeq ($(MAKECMDGOALS), clean)
+GOAL := clean
+endif
+
+#======================================================================
+# Build Environment (Don't edit these configurations)
+#======================================================================
+export REL_OUTLIB_DIR := $(REL_OUTPUT_DIR)/$(BUILD_MODE)/$(ARCH)
+
+#======================================================================
+# Toolchain setting
+#======================================================================
+CCACHE := $(shell type -P ccache 2>/dev/null)
+MAKE := make --no-print-directory
+export CC := $(CCACHE) clang -x c
+export CXX := $(CCACHE) clang -x c++
+export COBJXX := $(CCACHE) clang -x objective-c++
+export AR := libtool
+export STRIP := strip
+
+#----------------------------------------------------------------------
+# compiler flags
+#----------------------------------------------------------------------
+CFLAGS := -arch $(ARCH)
+CFLAGS += -fmessage-length=0
+CFLAGS += -fdiagnostics-show-note-include-stack
+CFLAGS += -fmacro-backtrace-limit=0
+CFLAGS += -fasm-blocks
+CFLAGS += -fstrict-aliasing
+CFLAGS += -mmacosx-version-min=10.4
+CFLAGS += -D_REENTRANT
+CFLAGS += -MP -MMD
+CFLAGS += -Wall -Winit-self -Wdeprecated-declarations
+
+ifeq ($(V), 1)
+CFLAGS += -Wextra -Wsign-conversion
+else
+CFLAGS += -Wsign-compare
+endif
+
+CFLAGS += -Wno-unused-parameter -stdlib=libstdc++
+
+ifeq ($(BUILD_MODE), debug)
+CFLAGS += -D_DEBUG -O0 -g
+else
+CFLAGS += -DNDEBUG -O2 -Os
+endif
+
+CXXFLAGS := -fno-exceptions -Winvalid-offsetof -Wno-reorder
+
+export CXXFLAGS
+export CFLAGS
+
+#----------------------------------------------------------------------
+# flags
+#----------------------------------------------------------------------
+export ARFLAGS := -static -arch_only $(ARCH)
+export STRIPFLAGS := -S
+
+#======================================================================
+# Make the Projects
+#======================================================================
+.PHONY: all clean delete libs
+
+all: libs
+
+clean: libs
+	@echo
+
+delete:
+	@echo "Delete output files for $(ARCH)"
+	@$(RM) -rf $(REL_OUTLIB_DIR)
+			
+libs: essential_libs project_libs
+
+essential_libs: version pal mem
+
+version:
+ifneq ($(GOAL), clean)
+	@sh $(ABS_SRC_ROOT)/00_config/version/version_modify_mac.sh
+endif
+	@$(MAKE) -C $(ABS_SRC_ROOT)/00_config/version -f Makefile.proj $(GOAL)
+
+pal:
+	@$(MAKE) -C $(ABS_SRC_ROOT)/01_pal/pal -f Makefile.proj $(GOAL)
+
+mem:
+	@$(MAKE) -C $(ABS_SRC_ROOT)/02_mem/mem -f Makefile.proj $(GOAL)
+
+#======================================================================
+# Include make files
+#======================================================================
+include ../../projects/project_libs.mak
+include merge.mak
+#======================================================================
+

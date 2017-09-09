@@ -1,0 +1,24 @@
+
+    ==============================================
+             IRIS Build Tool for VIM Help
+    ==============================================
+
+    F4       : Config (make config)
+
+    F5       : Build
+    F6       : Build (serialized)
+    F7       : Clean
+    F8       : Delete
+
+    Ctrl+v,b : Build (w/ verbose log)
+    Ctrl+v,s : Build (serialized & w/ verbose log)
+
+    F2       : Goto previous warning or error
+    F3       : Goto next warning or error
+
+    Ctrl+j   : Move cursor to upper window
+    Ctrl+k   : Move cursor to lower window
+
+    F9       : Quit
+
+    Type :nmap to display key mapping information
