@@ -1,0 +1,13 @@
+# config.json
+{
+  "DEFAULT": {
+    "CONFIG_TYPE": "JSON"
+  },
+  "LINUX": {
+    "CONFIG_TYPE": "JSON"
+    "CONFIG_TYPE": "JSON"
+  },
+  "WINDOWS": {
+    "CONFIG_TYPE": "JSON"
+  }
+}
